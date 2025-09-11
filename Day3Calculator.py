@@ -1,35 +1,50 @@
 import streamlit as st
 
-# Title
+# Step 1: Initialize session state
+if "reset_triggered" not in st.session_state:
+    st.session_state.reset_triggered = False
+if "result" not in st.session_state:
+    st.session_state.result = ""
+if "calc_text" not in st.session_state:
+    st.session_state.calc_text = ""
+if "error" not in st.session_state:
+    st.session_state.error = ""
+
+# Step 2: Reset logic BEFORE rendering widgets
+if st.session_state.reset_triggered:
+    st.session_state.input1_value = ""
+    st.session_state.input2_value = ""
+    st.session_state.result = ""
+    st.session_state.calc_text = ""
+    st.session_state.error = ""
+    st.session_state.reset_triggered = False
+
+# Step 3: Title
 st.title("🧮 Simple Calculator")
 
-# Input fields
-num1 = st.text_input("Enter first number")
-num2 = st.text_input("Enter second number")
+# Step 4: Input fields
+input1 = st.text_input("Enter first number", key="input1_value")
+input2 = st.text_input("Enter second number", key="input2_value")
 
-# Operation selection
+# Step 5: Operation selection
 operation = st.selectbox("Choose operation", ["Add", "Subtract", "Multiply", "Divide"])
 
-# Buttons
-col1, col2 = st.columns(2)
+# Step 6: Buttons with message
+col1, col2 = st.columns([1, 2])
 calculate = col1.button("Calculate")
-clear = col2.button("Clear")
+with col2:
+    reset = st.button("Reset")
+    st.caption("🛈 Double click the button")
 
-# Result placeholder
-result_placeholder = st.empty()
-calc_text_placeholder = st.empty()
-error_placeholder = st.empty()
+# Step 7: Reset flag
+if reset:
+    st.session_state.reset_triggered = True
 
-# Clear button logic
-if clear:
-    st.experimental_rerun()
-
-# Calculation logic
+# Step 8: Calculation logic
 if calculate:
     try:
-        a = float(num1)
-        b = float(num2)
-        error_placeholder.empty()  # Clear previous errors
+        a = float(input1)
+        b = float(input2)
 
         if operation == "Add":
             result = a + b
@@ -46,11 +61,23 @@ if calculate:
             result = a / b
             symbol = "÷"
 
-        # Display result
-        result_placeholder.success(f"The result is {result}")
-        calc_text_placeholder.info(f"Calculation: {a} {symbol} {b}")
+        st.session_state.result = f"The result is {result}"
+        st.session_state.calc_text = f"Calculation: {a} {symbol} {b}"
+        st.session_state.error = ""
 
     except ValueError:
-        error_placeholder.error("❌ Please enter valid numbers.")
+        st.session_state.result = ""
+        st.session_state.calc_text = ""
+        st.session_state.error = "❌ Please enter valid numbers."
     except ZeroDivisionError as e:
-        error_placeholder.error(f"❌ {e}")
+        st.session_state.result = ""
+        st.session_state.calc_text = ""
+        st.session_state.error = f"❌ {e}"
+
+# Step 9: Display output
+if st.session_state.result:
+    st.success(st.session_state.result)
+if st.session_state.calc_text:
+    st.info(st.session_state.calc_text)
+if st.session_state.error:
+    st.error(st.session_state.error)
